@@ -47,3 +47,7 @@ deps/.DS_Store
 # already existing elements were commented out
 
 #/target
+manual.html-chunked
+manual.pdf
+manual.toc
+tig
