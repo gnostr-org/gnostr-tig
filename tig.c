@@ -460,6 +460,9 @@ parse_options(int argc, char *argv[])
 	for (i = 1; i < argc; i++) {
 		char *opt = argv[i];
 
+		if (opt[0] && opt[0] != '-')
+			break;
+
 		if (!strcmp(opt, "-l")) {
 			opt_request = REQ_VIEW_LOG;
 			continue;
@@ -502,9 +505,6 @@ parse_options(int argc, char *argv[])
 				    ? REQ_VIEW_LOG : REQ_VIEW_DIFF;
 			break;
 		}
-
-		if (opt[0] && opt[0] != '-')
-			break;
 
 		die("unknown option '%s'\n\n%s", opt, usage);
 	}
