@@ -739,9 +739,6 @@ static struct keybinding default_keybindings[] = {
 	{ 'g',		REQ_TOGGLE_REV_GRAPH },
 	{ ':',		REQ_PROMPT },
 
-	/* wgetch() with nodelay() enabled returns ERR when there's no input. */
-	{ ERR,		REQ_NONE },
-
 	/* Using the ncurses SIGWINCH handler. */
 	{ KEY_RESIZE,	REQ_SCREEN_RESIZE },
 };
@@ -3755,8 +3752,13 @@ main(int argc, char *argv[])
 
 		/* Refresh, accept single keystroke of input */
 		key = wgetch(status_win);
-		if (key == ERR)
+
+		/* wgetch() with nodelay() enabled returns ERR when there's no
+		 * input. */
+		if (key == ERR) {
+			request = REQ_NONE;
 			continue;
+		}
 
 		request = get_keybinding(display[current_view]->keymap, key);
 
