@@ -60,6 +60,15 @@ static size_t utf8_length(const char *string, size_t max_width, int *coloffset, 
 #define SIZEOF_STR	1024	/* Default string size. */
 #define SIZEOF_REF	256	/* Size of symbolic or SHA1 ID. */
 #define SIZEOF_REV	41	/* Holds a SHA-1 and an ending NUL */
+
+/* Revision graph */
+
+#define REVGRAPH_INIT	'I'
+#define REVGRAPH_MERGE	'M'
+#define REVGRAPH_BRANCH	'+'
+#define REVGRAPH_COMMIT	'*'
+#define REVGRAPH_LINE	'|'
+
 #define SIZEOF_REVGRAPH	19	/* Size of revision ancestry graphics. */
 
 /* This color name can be used to refer to the default term colors. */
@@ -1948,8 +1957,27 @@ alloc_error:
 	report("Allocation failure");
 
 end:
+	view->ops->read(view, NULL);
 	end_update(view);
 	return FALSE;
+}
+
+static struct line *
+add_line_text(struct view *view, char *data, enum line_type type)
+{
+	struct line *line = &view->line[view->lines];
+
+	if (!data)
+		return NULL;
+
+	line->data = strdup(data);
+	if (!line->data)
+		return NULL;
+
+	line->type = type;
+	view->lines++;
+
+	return line;
 }
 
 
@@ -1976,14 +2004,14 @@ static void open_help_view(struct view *view)
 		return;
 	}
 
-	view->ops->read(view, "Quick reference for tig keybindings:");
+	add_line_text(view, "Quick reference for tig keybindings:", LINE_DEFAULT);
 
 	for (i = 0; i < ARRAY_SIZE(req_info); i++) {
 		char *key;
 
 		if (!req_info[i].request) {
-			view->ops->read(view, "");
-			view->ops->read(view, req_info[i].help);
+			add_line_text(view, "", LINE_DEFAULT);
+			add_line_text(view, req_info[i].help, LINE_DEFAULT);
 			continue;
 		}
 
@@ -1991,7 +2019,7 @@ static void open_help_view(struct view *view)
 		if (!string_format(buf, "%-25s %s", key, req_info[i].help))
 			continue;
 
-		view->ops->read(view, buf);
+		add_line_text(view, buf, LINE_DEFAULT);
 	}
 }
 
@@ -2383,26 +2411,20 @@ try_add_describe_ref:
 	if (!realloc_lines(view, view->line_size + 1))
 		return;
 
-	line = &view->line[view->lines];
-	line->data = strdup(buf);
-	if (!line->data)
-		return;
-
-	line->type = LINE_PP_REFS;
-	view->lines++;
+	add_line_text(view, buf, LINE_PP_REFS);
 }
 
 static bool
 pager_read(struct view *view, char *data)
 {
-	struct line *line = &view->line[view->lines];
+	struct line *line;
 
-	line->data = strdup(data);
-	if (!line->data)
+	if (!data)
+		return TRUE;
+
+	line = add_line_text(view, data, get_line_type(data));
+	if (!line)
 		return FALSE;
-
-	line->type = get_line_type(line->data);
-	view->lines++;
 
 	if (line->type == LINE_COMMIT &&
 	    (view == VIEW(REQ_VIEW_DIFF) ||
@@ -2507,7 +2529,7 @@ tree_compare_entry(enum line_type type1, char *name1,
 static bool
 tree_read(struct view *view, char *text)
 {
-	size_t textlen = strlen(text);
+	size_t textlen = text ? strlen(text) : 0;
 	char buf[SIZEOF_STR];
 	unsigned long pos;
 	enum line_type type;
@@ -2521,21 +2543,18 @@ tree_read(struct view *view, char *text)
 
 	if (first_read) {
 		/* Add path info line */
-		if (string_format(buf, "Directory path /%s", opt_path) &&
-		    realloc_lines(view, view->line_size + 1) &&
-		    pager_read(view, buf))
-			view->line[view->lines - 1].type = LINE_DEFAULT;
-		else
+		if (!string_format(buf, "Directory path /%s", opt_path) ||
+		    !realloc_lines(view, view->line_size + 1) ||
+		    !add_line_text(view, buf, LINE_DEFAULT))
 			return FALSE;
 
 		/* Insert "link" to parent directory. */
-		if (*opt_path &&
-		    string_format(buf, TREE_UP_FORMAT, view->ref) &&
-		    realloc_lines(view, view->line_size + 1) &&
-		    pager_read(view, buf))
-			view->line[view->lines - 1].type = LINE_TREE_DIR;
-		else if (*opt_path)
-			return FALSE;
+		if (*opt_path) {
+			if (!string_format(buf, TREE_UP_FORMAT, view->ref) ||
+			    !realloc_lines(view, view->line_size + 1) ||
+			    !add_line_text(view, buf, LINE_TREE_DIR))
+				return FALSE;
+		}
 	}
 
 	/* Strip the path part ... */
@@ -2574,14 +2593,13 @@ tree_read(struct view *view, char *text)
 		return TRUE;
 	}
 
-	if (!pager_read(view, text))
+	if (!add_line_text(view, text, type))
 		return FALSE;
 
 	/* Move the current line to the first tree entry. */
 	if (first_read)
 		view->lineno++;
 
-	view->line[view->lines - 1].type = type;
 	return TRUE;
 }
 
@@ -2668,12 +2686,7 @@ static struct view_ops tree_ops = {
 static bool
 blob_read(struct view *view, char *line)
 {
-	bool state = pager_read(view, line);
-
-	if (state == TRUE)
-		view->line[view->lines - 1].type = LINE_DEFAULT;
-
-	return state;
+	return add_line_text(view, line, LINE_DEFAULT);
 }
 
 static struct view_ops blob_ops = {
@@ -2687,7 +2700,7 @@ static struct view_ops blob_ops = {
 
 
 /*
- * Main view backend
+ * Revision graph
  */
 
 struct commit {
@@ -2699,6 +2712,198 @@ struct commit {
 	chtype graph[SIZEOF_REVGRAPH];	/* Ancestry chain graphics. */
 	size_t graph_size;		/* The width of the graph array. */
 };
+
+/* Size of rev graph with no  "padding" columns */
+#define SIZEOF_REVITEMS	(SIZEOF_REVGRAPH - (SIZEOF_REVGRAPH / 2))
+
+struct rev_graph {
+	struct rev_graph *prev, *next, *parents;
+	char rev[SIZEOF_REVITEMS][SIZEOF_REV];
+	size_t size;
+	struct commit *commit;
+	size_t pos;
+};
+
+/* Parents of the commit being visualized. */
+static struct rev_graph graph_parents[4];
+
+/* The current stack of revisions on the graph. */
+static struct rev_graph graph_stacks[4] = {
+	{ &graph_stacks[3], &graph_stacks[1], &graph_parents[0] },
+	{ &graph_stacks[0], &graph_stacks[2], &graph_parents[1] },
+	{ &graph_stacks[1], &graph_stacks[3], &graph_parents[2] },
+	{ &graph_stacks[2], &graph_stacks[0], &graph_parents[3] },
+};
+
+static inline bool
+graph_parent_is_merge(struct rev_graph *graph)
+{
+	return graph->parents->size > 1;
+}
+
+static inline void
+append_to_rev_graph(struct rev_graph *graph, chtype symbol)
+{
+	struct commit *commit = graph->commit;
+
+	if (commit->graph_size < ARRAY_SIZE(commit->graph) - 1)
+		commit->graph[commit->graph_size++] = symbol;
+}
+
+static void
+done_rev_graph(struct rev_graph *graph)
+{
+	if (graph_parent_is_merge(graph) &&
+	    graph->pos < graph->size - 1 &&
+	    graph->next->size == graph->size + graph->parents->size - 1) {
+		size_t i = graph->pos + graph->parents->size - 1;
+
+		graph->commit->graph_size = i * 2;
+		while (i < graph->next->size - 1) {
+			append_to_rev_graph(graph, ' ');
+			append_to_rev_graph(graph, '\\');
+			i++;
+		}
+	}
+
+	graph->size = graph->pos = 0;
+	graph->commit = NULL;
+	memset(graph->parents, 0, sizeof(*graph->parents));
+}
+
+static void
+push_rev_graph(struct rev_graph *graph, char *parent)
+{
+	int i;
+
+	/* "Collapse" duplicate parents lines.
+	 *
+	 * FIXME: This needs to also update update the drawn graph but
+	 * for now it just serves as a method for pruning graph lines. */
+	for (i = 0; i < graph->size; i++)
+		if (!strncmp(graph->rev[i], parent, SIZEOF_REV))
+			return;
+
+	if (graph->size < SIZEOF_REVITEMS) {
+		string_ncopy(graph->rev[graph->size++], parent, SIZEOF_REV);
+	}
+}
+
+static chtype
+get_rev_graph_symbol(struct rev_graph *graph)
+{
+	chtype symbol;
+
+	if (graph->parents->size == 0)
+		symbol = REVGRAPH_INIT;
+	else if (graph_parent_is_merge(graph))
+		symbol = REVGRAPH_MERGE;
+	else if (graph->pos >= graph->size)
+		symbol = REVGRAPH_BRANCH;
+	else
+		symbol = REVGRAPH_COMMIT;
+
+	return symbol;
+}
+
+static void
+draw_rev_graph(struct rev_graph *graph)
+{
+	struct rev_filler {
+		chtype separator, line;
+	};
+	enum { DEFAULT, RSHARP, RDIAG, LDIAG };
+	static struct rev_filler fillers[] = {
+		{ ' ',	REVGRAPH_LINE },
+		{ '`',	'.' },
+		{ '\'',	' ' },
+		{ '/',	' ' },
+	};
+	chtype symbol = get_rev_graph_symbol(graph);
+	struct rev_filler *filler;
+	size_t i;
+
+	filler = &fillers[DEFAULT];
+
+	for (i = 0; i < graph->pos; i++) {
+		append_to_rev_graph(graph, filler->line);
+		if (graph_parent_is_merge(graph->prev) &&
+		    graph->prev->pos == i)
+			filler = &fillers[RSHARP];
+
+		append_to_rev_graph(graph, filler->separator);
+	}
+
+	/* Place the symbol for this revision. */
+	append_to_rev_graph(graph, symbol);
+
+	if (graph->prev->size > graph->size)
+		filler = &fillers[RDIAG];
+	else
+		filler = &fillers[DEFAULT];
+
+	i++;
+
+	for (; i < graph->size; i++) {
+		append_to_rev_graph(graph, filler->separator);
+		append_to_rev_graph(graph, filler->line);
+		if (graph_parent_is_merge(graph->prev) &&
+		    i < graph->prev->pos + graph->parents->size)
+			filler = &fillers[RSHARP];
+		if (graph->prev->size > graph->size)
+			filler = &fillers[LDIAG];
+	}
+
+	if (graph->prev->size > graph->size) {
+		append_to_rev_graph(graph, filler->separator);
+		if (filler->line != ' ')
+			append_to_rev_graph(graph, filler->line);
+	}
+}
+
+/* Prepare the next rev graph */
+static void
+prepare_rev_graph(struct rev_graph *graph)
+{
+	size_t i;
+
+	/* First, traverse all lines of revisions up to the active one. */
+	for (graph->pos = 0; graph->pos < graph->size; graph->pos++) {
+		if (!strcmp(graph->rev[graph->pos], graph->commit->id))
+			break;
+
+		push_rev_graph(graph->next, graph->rev[graph->pos]);
+	}
+
+	/* Interleave the new revision parent(s). */
+	for (i = 0; i < graph->parents->size; i++)
+		push_rev_graph(graph->next, graph->parents->rev[i]);
+
+	/* Lastly, put any remaining revisions. */
+	for (i = graph->pos + 1; i < graph->size; i++)
+		push_rev_graph(graph->next, graph->rev[i]);
+}
+
+static void
+update_rev_graph(struct rev_graph *graph)
+{
+	/* If this is the finalizing update ... */
+	if (graph->commit)
+		prepare_rev_graph(graph);
+
+	/* Graph visualization needs a one rev look-ahead,
+	 * so the first update doesn't visualize anything. */
+	if (!graph->prev->commit)
+		return;
+
+	draw_rev_graph(graph->prev);
+	done_rev_graph(graph->prev->prev);
+}
+
+
+/*
+ * Main view backend
+ */
 
 static bool
 main_draw(struct view *view, struct line *line, unsigned int lineno, bool selected)
@@ -2767,6 +2972,7 @@ main_draw(struct view *view, struct line *line, unsigned int lineno, bool select
 		for (i = 0; i < commit->graph_size; i++)
 			waddch(view->win, commit->graph[i]);
 
+		waddch(view->win, ' ');
 		col += commit->graph_size + 1;
 	}
 
@@ -2813,9 +3019,17 @@ main_draw(struct view *view, struct line *line, unsigned int lineno, bool select
 static bool
 main_read(struct view *view, char *line)
 {
-	enum line_type type = get_line_type(line);
+	static struct rev_graph *graph = graph_stacks;
+	enum line_type type;
 	struct commit *commit = view->lines
 			      ? view->line[view->lines - 1].data : NULL;
+
+	if (!line) {
+		update_rev_graph(graph);
+		return TRUE;
+	}
+
+	type = get_line_type(line);
 
 	switch (type) {
 	case LINE_COMMIT:
@@ -2828,7 +3042,14 @@ main_read(struct view *view, char *line)
 		view->line[view->lines++].data = commit;
 		string_copy(commit->id, line);
 		commit->refs = get_refs(commit->id);
-		commit->graph[commit->graph_size++] = ACS_LTEE;
+		graph->commit = commit;
+		break;
+
+	case LINE_PARENT:
+		if (commit) {
+			line += STRING_SIZE("parent ");
+			push_rev_graph(graph->parents, line);
+		}
 		break;
 
 	case LINE_AUTHOR:
@@ -2842,6 +3063,9 @@ main_read(struct view *view, char *line)
 
 		if (!commit || !nameend || !emailend)
 			break;
+
+		update_rev_graph(graph);
+		graph = graph->next;
 
 		*nameend = *emailend = 0;
 		ident = chomp_string(ident);
