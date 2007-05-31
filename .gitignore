@@ -51,3 +51,5 @@ manual.html-chunked
 manual.pdf
 manual.toc
 tig
+tig.spec
+tig-*.tar.gz
