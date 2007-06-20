@@ -8,7 +8,7 @@ docdir	= $(prefix)/share/doc
 # to be overwritten by setting DIST_VERSION on the command line.
 ifneq (,$(wildcard .git))
 GITDESC	= $(subst tig-,,$(shell git describe))
-WTDIRTY	= $(if $(shell git-diff-index HEAD 2>/dev/null),-dirty)
+WTDIRTY	= $(if $(shell git diff-index HEAD 2>/dev/null),-dirty)
 VERSION	= $(GITDESC)$(WTDIRTY)
 else
 VERSION	= $(shell test -f VERSION && cat VERSION || echo "unknown-version")
@@ -66,7 +66,7 @@ install-doc: install-doc-man install-doc-html
 clean:
 	rm -rf manual.html-chunked $(TARNAME)
 	rm -f $(PROGS) $(ALLDOC) core *.xml *.toc
-	rm -f *.spec tig-*.tar.gz
+	rm -f *.spec tig-*.tar.gz tig-*.tar.gz.md5
 
 spell-check:
 	aspell --lang=en --check tig.1.txt tigrc.5.txt manual.txt
@@ -75,15 +75,14 @@ strip: all
 	strip $(PROGS)
 
 dist: tig.spec
-	git-archive --format=tar --prefix=$(TARNAME)/ HEAD > $(TARNAME).tar
-	@mkdir -p $(TARNAME)
-	@cp tig.spec $(TARNAME)
+	@mkdir -p $(TARNAME) && \
+	cp tig.spec $(TARNAME) && \
 	echo $(VERSION) > $(TARNAME)/VERSION
-	tar rf $(TARNAME).tar \
-	       $(TARNAME)/tig.spec \
-	       $(TARNAME)/VERSION
+	git archive --format=tar --prefix=$(TARNAME)/ HEAD > $(TARNAME).tar && \
+	tar rf $(TARNAME).tar $(TARNAME)/tig.spec $(TARNAME)/VERSION && \
+	gzip -f -9 $(TARNAME).tar && \
+	md5sum $(TARNAME).tar.gz > $(TARNAME).tar.gz.md5
 	@rm -rf $(TARNAME)
-	gzip -f -9 $(TARNAME).tar
 
 rpm: dist
 	rpmbuild -ta $(TARNAME).tar.gz
@@ -92,14 +91,14 @@ rpm: dist
 release-doc:
 	git checkout release && \
 	git merge master && \
-	make clean doc-man doc-html && \
+	$(MAKE) clean doc-man doc-html && \
 	git add $(MANDOC) $(HTMLDOC) && \
 	git commit -m "Sync docs" && \
 	git checkout master
 
 release-dist: release-doc
 	git checkout release && \
-	make dist && \
+	$(MAKE) dist && \
 	git checkout master
 
 .PHONY: all all-debug doc doc-man doc-html install install-doc \
