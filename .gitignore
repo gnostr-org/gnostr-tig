@@ -47,6 +47,13 @@ deps/.DS_Store
 # already existing elements were commented out
 
 #/target
+autom4te.cache
+config.h
+config.h.in
+config.log
+config.make
+config.status
+configure
 manual.html-chunked
 manual.pdf
 manual.toc
