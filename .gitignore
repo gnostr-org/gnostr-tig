@@ -47,6 +47,7 @@ deps/.DS_Store
 # already existing elements were commented out
 
 #/target
+aclocal.m4
 autom4te.cache
 config.h
 config.h.in
