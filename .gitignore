@@ -47,6 +47,8 @@ deps/.DS_Store
 # already existing elements were commented out
 
 #/target
+*.gcno
+*.gcda
 *.html
 *.o
 *.swp
@@ -71,6 +73,7 @@ doc/release-docs/
 src/builtin-config.c
 src/tig
 tags
+test/coverage
 test/tools/test-graph
 test/tmp
 tig-*.tar.gz
