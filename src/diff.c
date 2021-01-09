@@ -46,7 +46,7 @@ diff_open(struct view *view, enum open_flags flags)
 enum status_code
 diff_init_highlight(struct view *view, struct diff_state *state)
 {
-	if (!opt_diff_highlight || !*opt_diff_highlight)
+	if (!opt_diff_highlight || !*opt_diff_highlight || opt_word_diff)
 		return SUCCESS;
 
 	struct app_external *app = app_diff_highlight_load(opt_diff_highlight);
@@ -216,13 +216,14 @@ diff_common_read_diff_wdiff_group(struct diff_stat_context *context)
 {
 	const char *sep_add = strstr(context->text, "{+");
 	const char *sep_del = strstr(context->text, "[-");
+	const char *sep;
+	enum line_type next_type;
+	const char *end_delimiter;
+	const char *end_sep;
+	size_t len;
 
 	if (sep_add == NULL && sep_del == NULL)
 		return false;
-
-	const char * sep;
-	enum line_type next_type;
-	const char* end_delimiter;
 
 	if (sep_del == NULL || (sep_add != NULL && sep_add < sep_del)) {
 		sep = sep_add;
@@ -240,9 +241,8 @@ diff_common_read_diff_wdiff_group(struct diff_stat_context *context)
 	context->text = sep;
 
 	// workaround for a single }/] change
-	const char* end_sep = strstr(context->text + sizeof("{+") - 1, end_delimiter);
+	end_sep = strstr(context->text + sizeof("{+") - 1, end_delimiter);
 
-	size_t len;
 	if (end_sep == NULL) {
 		// diff is not terminated
 		len = strlen(context->text);
@@ -263,11 +263,10 @@ diff_common_read_diff_wdiff_group(struct diff_stat_context *context)
 	return true;
 }
 
-static struct line *
+static bool
 diff_common_read_diff_wdiff(struct view *view, const char *text)
 {
 	struct diff_stat_context context = { text, LINE_DEFAULT };
-
 
 	/* Detect remaining part of a word diff line:
 	 *
@@ -276,11 +275,10 @@ diff_common_read_diff_wdiff(struct view *view, const char *text)
 	 *	replaced [-some-]{+same+} text
 	 *	there could be [-one-] diff part{+s+} in the {+any +} line
 	 */
+	while (diff_common_read_diff_wdiff_group(&context))
+		;
 
-	while (diff_common_read_diff_wdiff_group(&context));
-
-	diff_common_add_cell(&context, strlen(context.text), false);
-
+	diff_common_add_cell(&context, strlen(context.text), true);
 	return diff_common_add_line(view, text, LINE_DEFAULT, &context);
 }
 
@@ -344,10 +342,7 @@ diff_common_read(struct view *view, const char *data, struct diff_state *state)
 		return line != NULL;
 	}
 
-	if (state->reading_diff_chunk && type == LINE_DEFAULT) {
-		if (diff_common_read_diff_wdiff(view, data))
-			return true;
-	} else if (type == LINE_DIFF_HEADER) {
+	if (type == LINE_DIFF_HEADER) {
 		state->after_diff = true;
 		state->reading_diff_chunk = false;
 
@@ -376,6 +371,10 @@ diff_common_read(struct view *view, const char *data, struct diff_state *state)
 	} else if (state->highlight && strchr(data, 0x1b)) {
 		return diff_common_highlight(view, data, type);
 
+	} else if (opt_word_diff && state->reading_diff_chunk &&
+		   /* combined diff format is not using word diff */
+		   !state->combined_diff) {
+		return diff_common_read_diff_wdiff(view, data);
 	}
 
 	return pager_common_read(view, data, type, NULL);
