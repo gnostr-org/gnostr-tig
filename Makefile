@@ -67,6 +67,7 @@ install: all## 	install
 	@install -m755 ./nostril $(PREFIX)/bin/gnostr || true
 	#@$(shell which nostril)
 	#@$(shell which gnostr)
+	$(MAKE) cargo-install
 
 config.h: configurator## 	config.h
 	./configurator > $@
