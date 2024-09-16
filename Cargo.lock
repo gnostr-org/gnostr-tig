@@ -678,12 +678,13 @@ name = "gnostr"
 version = "0.0.54"
 dependencies = [
  "gnostr-bins",
+ "sha256",
 ]
 
 [[package]]
 name = "gnostr-bins"
-version = "0.0.54"
-source = "git+https://github.com/gnostr-org/gnostr-bins.git#3494dc37c1a466dfe4f198decedf4dfc064bc685"
+version = "0.0.55"
+source = "git+https://github.com/gnostr-org/gnostr-bins.git#27e25cb142cba958bdab047cc83518e718711482"
 dependencies = [
  "argparse",
  "ascii",
@@ -719,7 +720,7 @@ dependencies = [
 [[package]]
 name = "gnostr-types"
 version = "0.7.0-unstable"
-source = "git+https://github.com/gnostr-org/gnostr-bins.git#3494dc37c1a466dfe4f198decedf4dfc064bc685"
+source = "git+https://github.com/gnostr-org/gnostr-bins.git#27e25cb142cba958bdab047cc83518e718711482"
 dependencies = [
  "aes",
  "base64 0.21.7",
@@ -1148,7 +1149,7 @@ dependencies = [
 [[package]]
 name = "nip44"
 version = "0.1.0"
-source = "git+https://github.com/gnostr-org/gnostr-bins.git#3494dc37c1a466dfe4f198decedf4dfc064bc685"
+source = "git+https://github.com/gnostr-org/gnostr-bins.git#27e25cb142cba958bdab047cc83518e718711482"
 dependencies = [
  "base64 0.21.7",
  "chacha20",
@@ -1912,7 +1913,7 @@ dependencies = [
 [[package]]
 name = "speedy"
 version = "0.8.6"
-source = "git+https://github.com/gnostr-org/gnostr-bins.git#3494dc37c1a466dfe4f198decedf4dfc064bc685"
+source = "git+https://github.com/gnostr-org/gnostr-bins.git#27e25cb142cba958bdab047cc83518e718711482"
 dependencies = [
  "memoffset",
  "speedy-derive",
@@ -1921,7 +1922,7 @@ dependencies = [
 [[package]]
 name = "speedy-derive"
 version = "0.8.6"
-source = "git+https://github.com/gnostr-org/gnostr-bins.git#3494dc37c1a466dfe4f198decedf4dfc064bc685"
+source = "git+https://github.com/gnostr-org/gnostr-bins.git#27e25cb142cba958bdab047cc83518e718711482"
 dependencies = [
  "proc-macro2",
  "quote",
