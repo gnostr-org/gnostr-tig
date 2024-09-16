@@ -31,8 +31,6 @@ tags
 libsecp256k1.a
 /target
 
-Cargo.lock
-Cargo.toml
 !/dist/*.json
 scripts/jb55-post
 scripts/nostr-follows

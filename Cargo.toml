@@ -1,0 +1,7 @@
+[package]
+name = "gnostr_lib"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+gnostr-bins = "0.0.53"
