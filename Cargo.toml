@@ -1,10 +1,10 @@
 [package]
-name = "gnostr_lib"
-version = "0.0.1"
+name = "gnostr"
+version = "0.0.54"
 edition = "2021"
-repository = "https://github.com/randymcmillan/nostril.git"
-homepage = "https://github.com/randymcmillan/nostril"
-documentation = "https://github.com/randymcmillan/nostril"
+repository = "https://github.com/gnostr-org/gnostr.git"
+homepage = "https://github.com/gnostr-org/gnostr.git"
+documentation = "https://github.com/gnostr-org/gnostr.git"
 description = "gnostr: git+nostr workflow utility"
 
 [dependencies]
