@@ -130,11 +130,16 @@ nostril --sec $(gnostr-sha256) --kind 30618  --tag "d" "<repo-id>" --tag "refs/<
 KIND_617='{"kind": 1617,"content": "<patch>","tags": [["a", "30617:<base-repo-owner-pubkey>:<base-repo-id>"],["r", "<earliest-unique-commit-id-of-repo>"],["p", "<repository-owner>"],["p", "<other-user>"],["t", "root"],["t", "root-revision"],["commit", "<current-commit-id>"],["r", "<current-commit-id>"],["parent-commit", "<parent-commit-id>"],["commit-pgp-sig", "-----BEGIN PGP SIGNATURE-----..."],["committer", "<name>", "<email>", "<timestamp>", "<timezone offset in minutes>"]]}'
 echo $KIND_617 #| gnostr-xq
 
-KIND_618='{"kind": 1621,"content": "<markdown text>","tags": [["a", "30617:<base-repo-owner-pubkey>:<base-repo-id>"],["p", "<repository-owner>"]]}'
-echo $KIND_618 #| gnostr-xq
+KIND_1621='{"kind": 1621,"content": "<markdown text>","tags": [["a", "30617:<base-repo-owner-pubkey>:<base-repo-id>"],["p", "<repository-owner>"]]}'
+echo $KIND_1621 #| gnostr-xq
+nostril --sec $(gnostr-sha256) --kind 1621 --content "<patch>" --tag a "30617:<base-repo-owner-pubkey>:<base-repo-id>" --tag p  "<repository-owner>" | gnostr-xq
+
 
 KIND_1622='{"kind": 1622,"content": "<markdown text>","tags": [["a", "30617:<base-repo-owner-pubkey>:<base-repo-id>", "<relay-url>"],["e", "<issue-or-patch-id-hex>", "", "root"],["p", "<patch-author-pubkey-hex>", "", "mention"],["e", "<previous-reply-id-hex>", "", "reply"]]}'
 echo $KIND_1622 #| gnostr-xq
+
+ nostril --sec $(gnostr-sha256) --kind 1622 --content "<markdown text>" --tag a "30617:<base-repo-owner-pubkey>:<base-repo-id>\"" --tag "relay-url" "git@<url>.git" --tag e "<issue-or-patch-id-hex>","","root" | gnostr-xq
+
 
 KIND_STATUS='{"kind": 1630,"kind": 1631,"kind": 1632,"kind": 1633,"content": "<markdown text>","tags": [["e", "<issue-or-original-root-patch-id-hex>", "", "root"],["e", "<accepted-revision-root-id-hex>", "", "reply"],["p", "<repository-owner>"],["p", "<root-event-author>"],["p", "<revision-author>"],["a", "30617:<base-repo-owner-pubkey>:<base-repo-id>", "<relay-url>"],["r", "<earliest-unique-commit-id-of-repo>"],["e", "<applied-or-merged-patch-event-id>", "",
 "mention"],["merge-commit","<merge-commit-id>"],["r", "<merge-commit-id>"],["applied-as-commits", "<commit-id-in-master-branch>]",["r", "<applied-commit-id>"]]]}'
