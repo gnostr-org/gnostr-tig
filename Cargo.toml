@@ -8,7 +8,7 @@ documentation = "https://github.com/randymcmillan/nostril"
 description = "gnostr: git+nostr workflow utility"
 
 [dependencies]
-gnostr-bins = "0.0.53"
+gnostr-bins = { version = "0.0.53", path = "vendor/gnostr-bins" }
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
