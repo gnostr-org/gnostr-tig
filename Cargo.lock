@@ -674,23 +674,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gnip44"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8331e0167bde2161bf91f938dab386cfd8b6491732a02f4ec2c5b16c20e21e78"
-dependencies = [
- "base64 0.21.7",
- "chacha20",
- "constant_time_eq",
- "hkdf",
- "hmac",
- "rand_core 0.6.4",
- "secp256k1 0.28.2",
- "sha2",
- "thiserror",
-]
-
-[[package]]
 name = "gnostr"
 version = "0.0.54"
 dependencies = [
@@ -699,9 +682,8 @@ dependencies = [
 
 [[package]]
 name = "gnostr-bins"
-version = "0.0.53"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1e857367dd2d32a69169ceeefe4cbc8a7037d08c40c4035b2cbe93b5f510c26"
+version = "0.0.54"
+source = "git+https://github.com/gnostr-org/gnostr-bins.git#3494dc37c1a466dfe4f198decedf4dfc064bc685"
 dependencies = [
  "argparse",
  "ascii",
@@ -736,9 +718,8 @@ dependencies = [
 
 [[package]]
 name = "gnostr-types"
-version = "0.7.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5bd2b3fc22a1aa8d8c006ae0c242082e12fa62d6033520c9ccbe023a7402cc60"
+version = "0.7.0-unstable"
+source = "git+https://github.com/gnostr-org/gnostr-bins.git#3494dc37c1a466dfe4f198decedf4dfc064bc685"
 dependencies = [
  "aes",
  "base64 0.21.7",
@@ -748,7 +729,6 @@ dependencies = [
  "chacha20poly1305",
  "core-net",
  "derive_more",
- "gnip44",
  "hex",
  "hmac",
  "http",
@@ -756,6 +736,7 @@ dependencies = [
  "lazy_static",
  "lightning-invoice",
  "linkify",
+ "nip44",
  "num_cpus",
  "pbkdf2",
  "rand 0.8.5",
@@ -1130,9 +1111,9 @@ checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
 name = "memoffset"
-version = "0.9.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a"
+checksum = "d61c719bcfbcf5d62b3a09efa6088de8c54bc0bfcd3ea7ae39fcc186108b8de1"
 dependencies = [
  "autocfg",
 ]
@@ -1162,6 +1143,22 @@ dependencies = [
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "nip44"
+version = "0.1.0"
+source = "git+https://github.com/gnostr-org/gnostr-bins.git#3494dc37c1a466dfe4f198decedf4dfc064bc685"
+dependencies = [
+ "base64 0.21.7",
+ "chacha20",
+ "constant_time_eq",
+ "hkdf",
+ "hmac",
+ "rand_core 0.6.4",
+ "secp256k1 0.28.2",
+ "sha2",
+ "thiserror",
 ]
 
 [[package]]
@@ -1914,9 +1911,8 @@ dependencies = [
 
 [[package]]
 name = "speedy"
-version = "0.8.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da1992073f0e55aab599f4483c460598219b4f9ff0affa124b33580ab511e25a"
+version = "0.8.6"
+source = "git+https://github.com/gnostr-org/gnostr-bins.git#3494dc37c1a466dfe4f198decedf4dfc064bc685"
 dependencies = [
  "memoffset",
  "speedy-derive",
@@ -1924,9 +1920,8 @@ dependencies = [
 
 [[package]]
 name = "speedy-derive"
-version = "0.8.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "658f2ca5276b92c3dfd65fa88316b4e032ace68f88d7570b43967784c0bac5ac"
+version = "0.8.6"
+source = "git+https://github.com/gnostr-org/gnostr-bins.git#3494dc37c1a466dfe4f198decedf4dfc064bc685"
 dependencies = [
  "proc-macro2",
  "quote",
