@@ -178,6 +178,7 @@ more:## 	more help
 	#$(MAKE) -f Makefile help
 
 -include Makefile
+-include nostril.mk
 
 ##initialize
 ##	git submodule update --init --recursive

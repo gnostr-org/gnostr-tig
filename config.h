@@ -141,7 +141,7 @@
 #define HAVE_WORDEXP_H 1
 
 /* Define as const if the declaration of iconv() needs const. */
-#define ICONV_CONST
+#define ICONV_CONST 
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "jonas.fonseca@gmail.com"
