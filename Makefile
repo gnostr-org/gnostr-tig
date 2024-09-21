@@ -182,7 +182,7 @@ uninstall:
 	$(Q)$(foreach doc, $(HTMLDOC:doc/%=%), \
 		$(QUIET_UNINSTALL_EACH)tools/uninstall.sh "$(DESTDIR)$(docdir)/tig/$(doc)";)
 
-clean: clean-test clean-coverage
+clean: nostril-clean clean-test clean-coverage
 	$(Q)$(RM) -r $(TARNAME) tig-*.tar.gz tig-*.tar.gz.sha256 .deps _book node_modules
 	$(Q)$(RM) -r $(compdb_dir) compile_commands.json
 	$(Q)$(RM) $(EXE) $(TOOLS) $(OBJS) core doc/*.xml src/builtin-config.c

@@ -76,7 +76,9 @@ configurator: configurator.c## 	configurator
 	$(CC) $< -o $@
 
 nostril-clean:## 	clean
+	rm -f src/*.o src/*.a
 	rm -f nostril *.o *.a
+	rm -f *-tig
 	rm -rf ext/secp256k1/.lib
 	rm -f configurator
 	rm -rf configurator.out.dSYM
